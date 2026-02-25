@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chmurowy System Poziomów</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .panel { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #218838; }
+        #taskList { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: white; }
+        li { margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>Moja Aplikacja - 150 Zadań</h1>
+    
+    <div class="panel">
+        <h2>Panel Użytkownika</h2>
+        <p>Obecny poziom: <strong id="currentLevel" style="font-size: 20px; color: #007bff;">1</strong></p>
+        <button onclick="levelUp()">Wejdź na wyższy poziom!</button>
+    </div>
+
+    <div class="panel">
+        <h2>Dostępne Zadania (Baza: <span id="taskCount">0</span>)</h2>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        // TUTAJ PÓŹNIEJ WKLEISZ SWÓJ ADRES API Z KONSOLI
+        const API_URL = 'https://piontchjj0.execute-api.eu-central-1.amazonaws.com/Prod';
+
+        async function fetchTasks() {
+            try {
+                const res = await fetch(`${API_URL}/tasks`);
+                const data = await res.json();
+                document.getElementById('taskCount').innerText = data.total_tasks;
+                
+                const list = document.getElementById('taskList');
+                list.innerHTML = '';
+                
+                data.tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>[Lvl ${task.required_level}]</strong> ${task.title}`;
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                console.error("Błąd pobierania zadań:", e);
+                document.getElementById('taskList').innerHTML = "<li>Czekam na podłączenie do API...</li>";
+            }
+        }
+
+        async function levelUp() {
+            try {
+                const res = await fetch(`${API_URL}/level`, { method: 'POST' });
+                const data = await res.json();
+                if(data.new_level) {
+                    document.getElementById('currentLevel').innerText = data.new_level;
+                    alert(data.message);
+                }
+            } catch (e) {
+                alert("Wystąpił błąd! Sprawdź połączenie.");
+            }
+        }
+
+        fetchTasks();
+    </script>
+</body>
+</html>
